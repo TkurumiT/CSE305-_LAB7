@@ -1,0 +1,89 @@
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+// Represents a Message with basic properties
+class Message {
+    private final String content;
+    private final String sender;
+    private final String recipient;
+
+    public Message(String content, String sender, String recipient) {
+        if (content == null || content.isEmpty() || sender == null || sender.isEmpty() || recipient == null || recipient.isEmpty()) {
+            throw new IllegalArgumentException("Content, sender, and recipient must be non-empty.");
+        }
+        this.content = content;
+        this.sender = sender;
+        this.recipient = recipient;
+    }
+
+    // Getters for message properties
+    public String getContent() {
+        return content;
+    }
+
+    public String getSender() {
+        return sender;
+    }
+
+    public String getRecipient() {
+        return recipient;
+    }
+}
+
+// Service responsible for handling messages
+class MessagingService {
+    private final Map<String, List<Message>> inbox = new HashMap<>();
+
+    // Sends a message by adding it to the recipient's inbox
+    public void sendMessage(String content, String sender, String recipient) {
+        Message message = new Message(content, sender, recipient);
+        inbox.computeIfAbsent(recipient, k -> new ArrayList<>()).add(message);
+    }
+
+    // Retrieves all messages for a specific recipient
+    public List<Message> getMessagesForRecipient(String recipient) {
+        return inbox.getOrDefault(recipient, List.of());
+    }
+}
+
+// Utility class to handle presentation logic
+class MessagingPrinter {
+    public static void printMessageSummary(Message message) {
+        System.out.printf("From: %s, To: %s, Content: %s%n",
+                message.getSender(), message.getRecipient(), message.getContent());
+    }
+
+    public static void printAllMessages(Map<String, List<Message>> inbox) {
+        inbox.forEach((recipient, messages) -> {
+            System.out.println("Messages for: " + recipient);
+            for (Message message : messages) {
+                printMessageSummary(message);
+            }
+        });
+    }
+}
+
+// Main application class
+public class Main {
+    public static void main(String[] args) {
+        MessagingService messagingService = new MessagingService();
+
+        // Sending messages
+        messagingService.sendMessage("Hello, tenant!", "Property Manager", "Tenant A");
+        messagingService.sendMessage("Important notice: Rent due next week.", "Property Owner", "Tenant A");
+        messagingService.sendMessage("Maintenance request received.", "Tenant A", "Property Manager");
+
+        // Retrieving and displaying messages for a specific recipient
+        List<Message> tenantAMessages = messagingService.getMessagesForRecipient("Tenant A");
+        System.out.println("Messages for Tenant A:");
+        for (Message message : tenantAMessages) {
+            MessagingPrinter.printMessageSummary(message);
+        }
+
+        // Displaying all messages
+        System.out.println("\nAll messages:");
+        MessagingPrinter.printAllMessages(messagingService.inbox);
+    }
+}
